@@ -1,6 +1,7 @@
 import './App.css';
 import styled from 'styled-components'
 import { useEffect, useState } from 'react';
+import BGimage from './images/buildingBG.jpg'
 function App() {
   const BIRD_SIZE = 20;
   const BIRD_LEFT = 250;
@@ -15,6 +16,8 @@ function App() {
   const [birdPosition, setBirdPosition] = useState(250)
   const [gameHasStarted, setGameHasStarted] = useState(false)
   const [obstacleheight, setObstacleHeight] = useState(100);
+  const [bgRight1, setBgRight1] = useState(250);
+  const [bgRight2, setBgRight2] = useState(-250);
   const [obstacleLeft, setObstacleLeft] = useState(GAMECONTAINER_WIDTH-OBSTACLE_WIDTH)
   const [isObstaclePassed, setisObstaclePassed] = useState(false);
   const [score, setScore] = useState(0);
@@ -31,7 +34,7 @@ function App() {
   },[birdPosition, obstacleheight, bottomObstacleHeight, obstacleLeft])
 
   useEffect(()=>{
-    let obstacleId;
+    let obstacleId,bgId;
     if(gameHasStarted && obstacleLeft>-OBSTACLE_WIDTH){
       obstacleId = setInterval(() => {
         setObstacleLeft((obstacleLeft)=>obstacleLeft-5)
@@ -42,14 +45,27 @@ function App() {
       setObstacleHeight(Math.floor(Math.random()*(GAMECONTAINER_HEIGHT-OBSTACLE_GAP)));
       setisObstaclePassed(false);
     }
-    if(gameHasStarted && !isObstaclePassed && obstacleLeft<(BIRD_LEFT+OBSTACLE_WIDTH)){
+    if(gameHasStarted && !isObstaclePassed && obstacleLeft<(BIRD_LEFT-OBSTACLE_WIDTH)){
       setScore(score=> score+1);
       setisObstaclePassed(true);
     }
+    if(bgRight1<500 && gameHasStarted){
+      bgId = setInterval(() => {
+        setBgRight1((bgRight1)=>bgRight1+5);
+        setBgRight2((bgRight2)=>bgRight2+5);
+      }, 24);
+    }
+    else if(bgRight1===500 && gameHasStarted){
+      setBgRight1(-500);
+    }
+    if(bgRight2===500 && gameHasStarted){
+      setBgRight2(-500);
+    }
     return(()=>{
       clearInterval(obstacleId);
+      clearInterval(bgId);
     })    
-  },[gameHasStarted,obstacleLeft,score,isObstaclePassed])
+  },[gameHasStarted,obstacleLeft,score,isObstaclePassed,bgRight1,bgRight2])
 
   useEffect(()=>{
     let timeId;
@@ -91,6 +107,8 @@ function App() {
             top = {OBSTACLE_GAP}
             left = {obstacleLeft} 
             />
+          <Background img = {BGimage} right={bgRight1} top = {-300}/>
+          <Background img = {BGimage} right={bgRight2} top = {-800}/>
           <Bird size={BIRD_SIZE} top={birdPosition} left = {GAMECONTAINER_WIDTH+BIRD_LEFT}/>
         </GameContainer>
         <span>{score}</span>
@@ -121,7 +139,8 @@ const Div = styled.div`
     font-size: 24px;
     position: absolute;
     top: 20px;
-    left: 750px
+    left: 750px;
+    z-index: 2;
   }
 `;
 
@@ -140,5 +159,18 @@ const Obstacle = styled.div`
   height: ${(props)=> props.height}px;
   background-color: green;
   left: ${(props)=> props.left}px;
+  z-index: 1;
 
+`;
+
+const Background = styled.div`
+  position: relative;
+  right: ${(props)=>props.right}px;
+  top: ${(props)=>props.top}px;
+  background-color: transparent;
+  width: 500px;
+  height: 500px;
+  background-image: url(${(props)=>props.img});
+  background-repeat: no-repeat;
+  background-size: 500px 500px;  
 `;
